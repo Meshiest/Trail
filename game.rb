@@ -838,7 +838,8 @@ begin
         if selected[:type] == :consumable && $game[:members][$game[:invTarget]][:health] > 0
           white("Press E to use #{selected[:name]} on #{$game[:members][$game[:invTarget]][:name]} (#{$game[:members][$game[:invTarget]][:health]}/#{$diseases[$game[:members][$game[:invTarget]][:sick]][:name]})".center(80))
         else
-          addstr("You can not use #{selected[:name]} on #{$game[:members][$game[:invTarget]][:name]} (#{$game[:members][$game[:invTarget]][:health]}/#{$diseases[$game[:members][$game[:invTarget]][:sick]][:name]})".center(80))
+          health = $diseases[$game[:members][$game[:invTarget]][:health]]
+          addstr("You can not use #{selected[:name]} on #{$game[:members][$game[:invTarget]][:name]}".center(80))
         end
 
         $game[:inventory].length.times { |i|
