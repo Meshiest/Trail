@@ -246,9 +246,18 @@ end
 def startShopping
   $screen[:curr]=:shop
   list = $items.keys.shuffle[0..(rand(1...($items.length/2)))]
-  $game[:shop][:list] = list.map{|k|[k,rand(1..8)]}
+  $game[:shop][:list] = list.map{|k|[k,rand(3..20)]}
   $game[:shop][:cursor] = {x:0,y:0}
   opt[:selected] = $game[:shop][:cursor][:x]
+  bool = false
+  $game[:shop][:list].length.times { |i|
+    k = $game[:shop][:list][i][0]
+    if k == :food
+      $game[:shop][:list][i][1] += rand(20..70)
+      bool = true
+    end
+  }
+  $game[:shop][:list] << [:food,rand(20..70)] if !bool
 end
 
 def getShopSelect
@@ -345,6 +354,7 @@ def startHunting
     sleep(10)
     $screen[:curr]=:game
     addItem(:food,$game[:hunting][:score]*4)
+    $game[:score] += $game[:hunting][:score] * 5
     $game[:situation] << "Hunted #{$game[:hunting][:score]} animals and got #{$game[:hunting][:score]*4}lb of food!"
   }
   $game[:hunting][:grid] = [['','',''],['','',''],['','','']]
@@ -489,11 +499,13 @@ def startGame
     :money => 50,
     :ammo => 0,
     :hunting => {},
-    :shop => {}
+    :shop => {},
+    :score => 0,
+    :scored => false
   }
   addItem(:food,50)
   addItem(:mDrugs,5)
-  addItem(:ammo,3)
+  addItem(:ammo,20)
 
   continueGame
 
@@ -522,7 +534,10 @@ def tick
       next
     end
     damage = $diseases[well][:damage]
-    damage = 1 if itemCount(:food) <= 0 && damage < 0
+    if itemCount(:food) <= 0 && damage < 0
+      m[:sick] = :well
+      damage = 1
+    end
     m[:health] -= damage
     m[:health] = 100 if m[:health] > 100
     if m[:health] <= 0
@@ -546,7 +561,7 @@ def tick
     addItem item
     return
   end
-  if rand(0..15) == 0
+  if rand(0..13) == 0
     $game[:situation] << 'You find a shop'
     $screen[:curr] = :shopYN
     return
@@ -563,7 +578,7 @@ def continueGame
   end
   situation
   tick
-  $game[:progress] += rand*0.01+0.001
+  $game[:progress] += rand*0.0125+0.001
   if $game[:progress] > 1
     $game[:progress] = 1
     $screen[:curr] = :win
@@ -775,6 +790,16 @@ begin
 
       setpos(10,0)
       white('You made it to the end!'.center(80))
+      setpos(11,0)
+      if !$game[:scored]
+        $game[:members].each { |m|
+          $game[:score] += m[:health].to_i*2 if m[:health] > 0
+        }
+        $game[:score] += itemCount(:food).to_i
+        $game[:score] += ($game[:money].to_i/2).round
+      end
+      $game[:scored] = true
+      addstr("Final Score: #{$game[:score]}".center(80))
       setpos(12,0)
       addstr('Press SPACE to go to the main menu'.center(80))
 
